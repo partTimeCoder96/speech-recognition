@@ -1,0 +1,132 @@
+/**
+ * Sample React Native App
+ * https://github.com/facebook/react-native
+ *
+ * @format
+ * @flow
+ */
+
+import React,{useState,useEffect,useCallback} from 'react';
+import {
+  SafeAreaView,
+  StyleSheet,
+  ScrollView,
+  View,
+  Text,
+  StatusBar,
+  Image,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  Permission
+} from 'react-native';
+
+import voice from './microphone.png'
+import wavegif from './wave.gif'
+import {check, PERMISSIONS, RESULTS,request} from 'react-native-permissions';
+import Voice from '@react-native-community/voice';
+
+export default class  App extends React.Component{
+
+  constructor(props){
+    super(props)
+    Voice.onSpeechStart = this.onSpeechStartHandler.bind(this);
+    Voice.onSpeechEnd = this.onSpeechEndHandler.bind(this);
+   // Voice.onSpeechResults = this.onSpeechResultsHandler.bind(this);
+
+    this.state={
+      setWave:0,
+    }
+  }
+  
+
+  onSpeechStartHandler=()=>{    
+      Voice.start('en-US');
+  }
+  // const onSpeechEnd=useCallback(()=>{
+  //   Voice.onSpeechEnd();
+  // })
+
+  onSpeechEndHandler=()=>{
+  
+    Voice.stop()
+  
+  
+}
+componentDidMount(){
+  this.checkPermission();
+} 
+
+   checkPermission=()=>{
+    check(PERMISSIONS.ANDROID.RECORD_AUDIO)
+    .then(result => {
+      switch (result) {
+        case RESULTS.UNAVAILABLE:
+          console.log(
+            'This feature is not available (on this device / in this context)',
+          );
+          break;
+        case RESULTS.DENIED:
+          console.log(
+            'The permission has not been requested / is denied but requestable',
+          );
+            request(PERMISSIONS.ANDROID.RECORD_AUDIO).then((res)=>{
+              console.log('res',res);
+              
+            }).catch((err)=>{
+              console.log('request not granted',err);
+            })
+          break;
+        case RESULTS.GRANTED:
+          console.log('The permission is granted');
+    
+          break;
+        case RESULTS.BLOCKED:
+          console.log('The permission is denied and not requestable anymore');
+          break;
+      }
+    })
+    .catch(error => {
+      console.log('err',error );
+    });
+
+  }
+
+  showWave=async ()=>{
+    console.log('showwave');
+    this.setState({setWave:1})
+    this.onSpeechStartHandler()
+    // try{
+    //   await Voice.start('en-US');
+    // } catch(e){
+    //   console.log('err in voice start',e);
+    // }
+    
+  }
+
+
+   hideWave(){
+    console.log('hidewave');
+    this.setState({setWave:0})
+    this.onSpeechEndHandler()
+  }
+  render(){
+
+  
+  return(
+
+    <View style={{flex:1,justifyContent:'center'}}>
+      {
+        this.state.setWave == 0?null:<Image source={require('./wave2.gif')} style={{width:'100%',height:100,alignSelf:'center',margin:20}}/>
+      }
+   
+    <View>
+      <TouchableWithoutFeedback onPressIn={()=>this.showWave()} onPressOut={()=>this.hideWave()}>
+      <Image source={voice} style={{width:50,height:50,alignSelf:'center'}}/>
+      </TouchableWithoutFeedback>
+      
+    </View>
+
+    </View>
+  )
+    }
+}
